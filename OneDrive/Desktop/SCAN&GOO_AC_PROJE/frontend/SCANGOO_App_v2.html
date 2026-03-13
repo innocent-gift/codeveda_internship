@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCAN&GOO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green: #00C566; --green-dark: #009E52; --green-light: #E6FFF3;
+      --bg: #F5F7F5; --white: #FFFFFF; --black: #0D1A0F;
+      --gray: #6B7A6E; --gray-light: #D8E0DA; --red: #FF3B5C;
+      --yellow: #FFD600; --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --blue: #2E7CF6; --purple: #7B5EA7; --orange: #FF8C00;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--black); min-height: 100vh; display: flex; justify-content: center; }
+    #app { width: 100%; max-width: 430px; min-height: 100vh; background: var(--white); position: relative; overflow: hidden; }
+    .screen { display: none; flex-direction: column; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    /* SPLASH */
+    #screen-splash { background: var(--black); align-items: center; justify-content: center; }
+    .splash-logo { display: flex; flex-direction: column; align-items: center; animation: fadeUp 0.8s ease forwards; }
+    .splash-logo .icon { width: 90px; height: 90px; background: var(--green); border-radius: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .splash-logo h1 { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; color: var(--white); letter-spacing: -1px; }
+    .splash-logo h1 span { color: var(--green); }
+    .splash-logo p { color: #8FA696; font-size: 15px; margin-top: 6px; }
+    .splash-bar { width: 200px; height: 4px; background: #1E2E21; border-radius: 99px; overflow: hidden; margin-top: 40px; }
+    .splash-bar-fill { height: 100%; background: var(--green); border-radius: 99px; animation: loadBar 2s ease forwards; }
+    @keyframes loadBar { from { width: 0; } to { width: 100%; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* AUTH */
+    .auth-header { background: var(--black); padding: 60px 28px 40px; border-radius: 0 0 32px 32px; }
+    .auth-header h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .auth-header p { color: #8FA696; font-size: 14px; }
+    .auth-body { padding: 32px 28px; flex: 1; }
+    .auth-tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .auth-tab { flex: 1; padding: 10px; border: none; background: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--gray); transition: all 0.2s; }
+    .auth-tab.active { background: var(--white); color: var(--black); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--gray); margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--gray-light); border-radius: 12px; font-size: 15px; font-family: 'DM Sans', sans-serif; background: var(--white); transition: border-color 0.2s; outline: none; }
+    .form-group input:focus { border-color: var(--green); }
+    .btn-primary { width: 100%; padding: 16px; background: var(--green); color: var(--white); border: none; border-radius: 14px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--black); border: 1.5px solid var(--gray-light); border-radius: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 12px; }
+    .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+
+    /* HOME */
+    #screen-home { background: var(--bg); }
+    .home-header { background: var(--black); padding: 56px 24px 32px; border-radius: 0 0 32px 32px; position: relative; overflow: hidden; }
+    .home-header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,197,102,0.15) 0%, transparent 70%); border-radius: 50%; }
+    .home-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .home-greeting { color: #8FA696; font-size: 13px; }
+    .home-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--white); }
+    .avatar { width: 44px; height: 44px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; color: var(--white); font-size: 16px; }
+    .scan-btn { background: var(--green); border: none; border-radius: 20px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; cursor: pointer; width: 100%; transition: all 0.2s; }
+    .scan-btn:hover { transform: scale(1.02); }
+    .scan-btn-icon { width: 52px; height: 52px; background: rgba(255,255,255,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .scan-btn-text { text-align: left; }
+    .scan-btn-text strong { display: block; color: var(--white); font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+    .scan-btn-text span { color: rgba(255,255,255,0.7); font-size: 13px; }
+    .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px 16px; }
+    .stat-card { background: var(--white); border-radius: 18px; padding: 18px; box-shadow: var(--card-shadow); }
+    .stat-card .stat-label { font-size: 12px; color: var(--gray); margin-bottom: 6px; }
+    .stat-card .stat-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
+    .stat-card .stat-unit { font-size: 13px; color: var(--gray); font-weight: 400; }
+    .home-section { padding: 4px 16px 16px; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .history-item { background: var(--white); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .history-icon { width: 40px; height: 40px; background: var(--green-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .history-info { flex: 1; }
+    .history-info .h-name { font-size: 14px; font-weight: 500; }
+    .history-info .h-date { font-size: 12px; color: var(--gray); }
+    .history-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+    .history-amount .curr { font-size: 11px; color: var(--gray); font-weight: 400; }
+
+    /* SCANNER */
+    #screen-scanner { background: var(--black); }
+    .scanner-header { padding: 56px 24px 20px; display: flex; align-items: center; gap: 16px; }
+    .back-btn { width: 42px; height: 42px; background: rgba(255,255,255,0.1); border: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .scanner-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); }
+    .camera-view { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .camera-bg { position: absolute; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .camera-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+    .scan-frame { position: relative; z-index: 10; width: 240px; height: 240px; }
+    .scan-corner { position: absolute; width: 28px; height: 28px; border-color: var(--green); border-style: solid; }
+    .c-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .c-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .c-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+    .c-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+    .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--green), transparent); animation: scanMove 1.8s ease-in-out infinite; }
+    @keyframes scanMove { 0% { top: 20px; } 50% { top: 200px; } 100% { top: 20px; } }
+    .scan-hint { position: absolute; bottom: 60px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.7); font-size: 14px; }
+    .demo-products-panel { background: var(--white); border-radius: 28px 28px 0 0; padding: 20px 20px 30px; }
+    .demo-panel-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--gray); text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+    .demo-products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .demo-product-btn { background: var(--bg); border: none; border-radius: 14px; padding: 14px; text-align: left; cursor: pointer; transition: all 0.2s; }
+    .demo-product-btn:hover { background: var(--green-light); }
+    .demo-product-btn .dp-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .demo-product-btn .dp-price { font-size: 13px; color: var(--green); font-weight: 700; }
+    .demo-product-btn .dp-weight { font-size: 11px; color: var(--gray); }
+
+    /* CART */
+    #screen-cart { background: var(--bg); }
+    .cart-header { background: var(--white); padding: 56px 24px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .cart-header-left { display: flex; align-items: center; gap: 14px; }
+    .cart-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+    .cart-count { background: var(--green); color: var(--white); width: 24px; height: 24px; border-radius: 50%; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .cart-items { padding: 16px; flex: 1; overflow-y: auto; }
+    .cart-item { background: var(--white); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; box-shadow: var(--card-shadow); animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .item-emoji { font-size: 28px; width: 44px; text-align: center; flex-shrink: 0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
+    .item-controls { display: flex; align-items: center; gap: 8px; }
+    .qty-btn { width: 28px; height: 28px; border: none; border-radius: 8px; background: var(--bg); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; transition: all 0.15s; }
+    .qty-btn:hover { background: var(--green-light); color: var(--green); }
+    .qty-btn.remove:hover { background: #FFE5EA; color: var(--red); }
+    .qty-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; min-width: 20px; text-align: center; }
+    .item-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; text-align: right; min-width: 65px; }
+    .cart-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray); gap: 12px; padding: 40px; }
+    .cart-footer { background: var(--white); border-radius: 24px 24px 0 0; padding: 20px 20px 30px; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); }
+    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .cart-total-row .label { color: var(--gray); font-size: 14px; }
+    .cart-total-row .value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+    .cart-total-row.grand .value { font-size: 24px; color: var(--green); }
+    .cart-total-row.grand .label { font-size: 16px; color: var(--black); font-weight: 600; }
+    .divider { border: none; border-top: 1px dashed var(--gray-light); margin: 12px 0; }
+    .weight-warning { background: #FFF8E1; border: 1px solid var(--yellow); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #7A6000; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+    .add-more-btn { border: none; background: none; color: var(--green); font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 0; font-family: 'DM Sans', sans-serif; }
+
+    /* CHECKOUT */
+    #screen-checkout { background: var(--bg); }
+    .checkout-header { background: var(--black); padding: 56px 24px 28px; border-radius: 0 0 32px 32px; }
+    .checkout-header h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+    .checkout-header p { color: #8FA696; font-size: 14px; }
+    .checkout-body { padding: 20px 16px; flex: 1; }
+    .checkout-summary-card { background: var(--white); border-radius: 18px; padding: 18px; margin-bottom: 16px; box-shadow: var(--card-shadow); }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 10px; }
+    .summary-row:last-child { margin-bottom: 0; }
+    .summary-row .s-label { color: var(--gray); }
+    .summary-row .s-val { font-weight: 600; }
+    .summary-row.total .s-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--black); }
+    .summary-row.total .s-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--green); }
+    .payment-section { margin-bottom: 16px; }
+    .payment-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .payment-options { display: flex; flex-direction: column; gap: 10px; }
+    .payment-option { background: var(--white); border: 2px solid var(--gray-light); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; }
+    .payment-option.selected { border-color: var(--green); background: var(--green-light); }
+    .payment-option-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .momo-icon { background: #FFCF00; } .airtel-icon { background: #FF2800; } .cash-icon { background: #E8F5E9; }
+    .payment-option-info { flex: 1; }
+    .payment-option-info strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .payment-option-info span { font-size: 12px; color: var(--gray); }
+    .radio-dot { width: 20px; height: 20px; border: 2px solid var(--gray-light); border-radius: 50%; flex-shrink: 0; transition: all 0.2s; }
+    .payment-option.selected .radio-dot { border-color: var(--green); background: var(--green); box-shadow: 0 0 0 3px rgba(0,197,102,0.2); }
+    .pay-now-btn { width: 100%; padding: 18px; background: var(--green); color: var(--white); border: none; border-radius: 16px; font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+    .pay-now-btn:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,197,102,0.3); }
+
+    /* PROCESSING */
+    #screen-processing { background: var(--black); align-items: center; justify-content: center; }
+    .processing-content { text-align: center; color: var(--white); padding: 40px; }
+    .processing-spinner { width: 80px; height: 80px; border: 4px solid rgba(0,197,102,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 28px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .processing-content h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .processing-content p { color: #8FA696; font-size: 15px; }
+
+    /* RECEIPT */
+    #screen-receipt { background: var(--bg); }
+    .receipt-header { background: var(--black); padding: 56px 24px 36px; border-radius: 0 0 40px 40px; text-align: center; }
+    .success-icon { width: 72px; height: 72px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 0 12px rgba(0,197,102,0.15); }
+    .receipt-header h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .receipt-header p { color: #8FA696; font-size: 14px; }
+    .receipt-body { padding: 20px 16px; flex: 1; }
+    .receipt-card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 14px; box-shadow: var(--card-shadow); }
+    .receipt-card-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .receipt-item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bg); font-size: 14px; }
+    .receipt-item-row:last-child { border-bottom: none; }
+    .r-item-name { font-weight: 500; }
+    .r-item-qty { color: var(--gray); font-size: 12px; }
+    .r-item-price { font-weight: 700; }
+    .qr-container { text-align: center; padding: 20px 0 10px; }
+    .qr-box { display: inline-block; background: var(--white); border: 3px solid var(--black); border-radius: 16px; padding: 16px; }
+    .qr-pattern { width: 140px; height: 140px; display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); gap: 2px; }
+    .qr-cell { border-radius: 2px; }
+    .qr-label { font-size: 11px; color: var(--gray); margin-top: 10px; }
+    .qr-id { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; background: var(--green-light); color: var(--green); border-radius: 8px; padding: 4px 12px; margin-top: 8px; display: inline-block; }
+    .done-btn { width: 100%; padding: 18px; background: var(--black); color: var(--white); border: none; border-radius: 16px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+    .done-btn:hover { background: #1E2E21; }
+
+    /* ===================== ADMIN ===================== */
+    #screen-admin { background: #0A0F0B; overflow-y: auto; }
+
+    .admin-topbar {
+      background: #0A0F0B;
+      padding: 52px 20px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 1px solid #1A2E1E;
+    }
+    .admin-logo { display: flex; align-items: center; gap: 10px; }
+    .admin-logo-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .admin-logo span { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--white); }
+    .admin-logo span em { color: var(--green); font-style: normal; }
+    .admin-logout { background: rgba(255,255,255,0.08); border: none; color: #8FA696; font-size: 13px; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .admin-logout:hover { color: var(--white); }
+
+    .admin-kpi-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; padding: 16px 16px 8px;
+    }
+    .kpi-card {
+      background: #121C14;
+      border: 1px solid #1E3222;
+      border-radius: 16px; padding: 14px 12px;
+      text-align: center;
+    }
+    .kpi-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--white); line-height: 1; }
+    .kpi-val.green { color: var(--green); }
+    .kpi-val.red { color: var(--red); }
+    .kpi-label { font-size: 11px; color: #4D6B52; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .admin-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 16px 10px;
+    }
+    .admin-section-header h3 {
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+      color: var(--white); display: flex; align-items: center; gap: 8px;
+    }
+    .live-badge {
+      background: rgba(0,197,102,0.15); color: var(--green);
+      font-size: 10px; font-weight: 700; padding: 3px 8px;
+      border-radius: 99px; letter-spacing: 1px;
+    }
+    .red-badge {
+      background: rgba(255,59,92,0.15); color: var(--red);
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    /* LIVE SESSION CARDS */
+    .sessions-list { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+    .session-card {
+      background: #121C14;
+      border: 1px solid #1E3222;
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .session-card.new-flash { animation: flashGreen 0.6s ease; }
+    @keyframes flashGreen { 0%,100% { border-color: #1E3222; } 50% { border-color: var(--green); box-shadow: 0 0 16px rgba(0,197,102,0.3); } }
+    .session-header {
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+    }
+    .session-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .session-info { flex: 1; }
+    .session-name { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+    .session-meta { font-size: 12px; color: #4D6B52; }
+    .session-summary { text-align: right; }
+    .session-total { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; color: var(--green); }
+    .session-item-count { font-size: 11px; color: #4D6B52; margin-top: 2px; }
+    .session-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 6px var(--green); }
+    .session-status-dot.idle { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    .session-status-dot.done { background: var(--gray); box-shadow: none; }
+
+    .session-items-table {
+      border-top: 1px solid #1A2E1E;
+      padding: 0 16px 14px;
+      display: none;
+    }
+    .session-items-table.open { display: block; }
+    .sit-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+    .sit-row:last-child { border-bottom: none; }
+    .sit-emoji { font-size: 18px; width: 28px; text-align: center; }
+    .sit-name { flex: 1; color: #C8D8CB; font-weight: 500; }
+    .sit-qty { background: rgba(0,197,102,0.12); color: var(--green); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+    .sit-price { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--white); font-size: 13px; min-width: 75px; text-align: right; }
+    .sit-total-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding-top: 10px; margin-top: 4px;
+      border-top: 1px dashed #1E3222;
+    }
+    .sit-total-label { font-size: 12px; color: #4D6B52; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sit-total-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--green); }
+    .sit-weight { font-size: 11px; color: #4D6B52; }
+
+    /* INVENTORY TRACKER */
+    .inventory-table { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .inv-row {
+      background: #121C14;
+      border: 1px solid #1E3222;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .inv-emoji { font-size: 22px; width: 36px; text-align: center; }
+    .inv-name-col { flex: 1; }
+    .inv-name { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+    .inv-price { font-size: 11px; color: #4D6B52; }
+    .inv-sold { text-align: center; min-width: 44px; }
+    .inv-sold-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--white); }
+    .inv-sold-label { font-size: 10px; color: #4D6B52; }
+    .inv-revenue { text-align: right; min-width: 80px; }
+    .inv-rev-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--green); }
+    .inv-rev-label { font-size: 10px; color: #4D6B52; }
+    .inv-bar-wrap { width: 100%; height: 4px; background: #1E3222; border-radius: 99px; margin-top: 8px; }
+    .inv-bar-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.5s ease; }
+
+    /* ALERTS */
+    .alerts-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .alert-card {
+      background: rgba(255,59,92,0.08);
+      border: 1px solid rgba(255,59,92,0.25);
+      border-radius: 14px; padding: 12px 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert-icon { font-size: 20px; flex-shrink: 0; }
+    .alert-body { flex: 1; }
+    .alert-body strong { display: block; font-size: 13px; color: var(--white); margin-bottom: 2px; }
+    .alert-body span { font-size: 12px; color: #8FA696; }
+    .alert-time { font-size: 11px; color: #4D6B52; white-space: nowrap; }
+
+    /* COMPLETED SESSIONS */
+    .completed-list { padding: 0 16px 40px; display: flex; flex-direction: column; gap: 8px; }
+    .completed-row {
+      background: #0F180F;
+      border: 1px solid #162116;
+      border-radius: 14px; padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .completed-row .cr-name { flex: 1; font-size: 13px; color: #6B7A6E; }
+    .completed-row .cr-items { font-size: 12px; color: #4D6B52; }
+    .completed-row .cr-total { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: #4D6B52; }
+    .completed-row .cr-method { font-size: 11px; color: #4D6B52; }
+    .completed-tick { color: var(--green); font-size: 16px; }
+    .empty-state { text-align: center; padding: 30px; color: #2D4A30; font-size: 14px; }
+
+    /* NAV */
+    .bottom-nav { background: var(--white); display: flex; align-items: center; padding: 12px 16px 24px; border-top: 1px solid var(--bg); position: sticky; bottom: 0; }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 12px; transition: all 0.2s; }
+    .nav-btn span { font-size: 11px; color: var(--gray); font-weight: 500; }
+    .nav-btn.active span { color: var(--green); }
+    .nav-scan-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; padding: 6px; }
+    .nav-scan-circle { width: 52px; height: 52px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -24px; box-shadow: 0 4px 14px rgba(0,197,102,0.4); transition: all 0.2s; }
+    .nav-scan-btn span { font-size: 11px; color: var(--gray); font-weight: 500; }
+
+    /* tag */
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tag-age { background: #FFE5E5; color: var(--red); }
+    .tag-ok { background: var(--green-light); color: var(--green-dark); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="screen-splash" class="screen active">
+    <div class="splash-logo">
+      <div class="icon">
+        <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="5" width="16" height="16" rx="2" fill="white"/>
+          <rect x="8" y="8" width="10" height="10" rx="1" fill="#00C566"/>
+          <rect x="29" y="5" width="16" height="16" rx="2" fill="white"/>
+          <rect x="32" y="8" width="10" height="10" rx="1" fill="#00C566"/>
+          <rect x="5" y="29" width="16" height="16" rx="2" fill="white"/>
+          <rect x="8" y="32" width="10" height="10" rx="1" fill="#00C566"/>
+          <rect x="29" y="29" width="5" height="5" fill="white"/>
+          <rect x="37" y="29" width="8" height="5" fill="white"/>
+          <rect x="29" y="37" width="16" height="8" rx="2" fill="white"/>
+        </svg>
+      </div>
+      <h1>SCAN<span>&</span>GOO</h1>
+      <p>Smart Shopping · Inzovu Supermarket</p>
+      <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- AUTH -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-header">
+      <h2>Welcome Back 👋</h2>
+      <p>Sign in to start your smart shopping session</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login', this)">Login</button>
+        <button class="auth-tab" onclick="switchAuthTab('register', this)">Register</button>
+      </div>
+      <div id="auth-login">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="login-phone" placeholder="+250 7XX XXX XXX" value="+250 788 123 456"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••" value="password123"/>
+        </div>
+        <button class="btn-primary" onclick="doLogin()">Sign In as Shopper</button>
+        <button class="btn-secondary" onclick="doAdminLogin()">Sign In as Admin →</button>
+      </div>
+      <div id="auth-register" style="display:none;">
+        <div class="form-group"><label>Full Name</label><input type="text" placeholder="e.g. Amahoro Jean"/></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+250 7XX XXX XXX"/></div>
+        <div class="form-group"><label>Create Password</label><input type="password" placeholder="Minimum 8 characters"/></div>
+        <button class="btn-primary" onclick="doLogin()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen">
+    <div class="home-header">
+      <div class="home-header-top">
+        <div>
+          <div class="home-greeting">Good morning,</div>
+          <div class="home-name">Amahoro Jean</div>
+        </div>
+        <div class="avatar">AJ</div>
+      </div>
+      <button class="scan-btn" onclick="gotoScanner()">
+        <div class="scan-btn-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+        </div>
+        <div class="scan-btn-text">
+          <strong>Scan &amp; Shop</strong>
+          <span>Point at any product barcode</span>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="home-stats">
+      <div class="stat-card"><div class="stat-label">Today's Sessions</div><div class="stat-value">3</div></div>
+      <div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value">12,500 <span class="stat-unit">RWF</span></div></div>
+      <div class="stat-card"><div class="stat-label">Items Scanned</div><div class="stat-value">18</div></div>
+      <div class="stat-card"><div class="stat-label">Time Saved</div><div class="stat-value">~14 <span class="stat-unit">min</span></div></div>
+    </div>
+    <div class="home-section">
+      <div class="section-title">Recent Purchases</div>
+      <div class="history-item"><div class="history-icon">🛒</div><div class="history-info"><div class="h-name">Inzovu Supermarket</div><div class="h-date">Today, 09:15 AM · 5 items</div></div><div class="history-amount">4,350 <span class="curr">RWF</span></div></div>
+      <div class="history-item"><div class="history-icon">🛒</div><div class="history-info"><div class="h-name">Inzovu Supermarket</div><div class="h-date">Yesterday, 06:40 PM · 3 items</div></div><div class="history-amount">2,700 <span class="curr">RWF</span></div></div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="showScreen('home')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-scan-btn" onclick="gotoScanner()">
+        <div class="nav-scan-circle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+        </div>
+        <span>Scan</span>
+      </button>
+      <button class="nav-btn" onclick="showScreen('cart')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span>Cart</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCANNER -->
+  <div id="screen-scanner" class="screen">
+    <div class="scanner-header">
+      <button class="back-btn" onclick="showScreen('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+      <div class="scanner-title">Scan Product</div>
+    </div>
+    <div class="camera-view">
+      <div class="camera-bg">
+        <svg width="100%" height="100%" viewBox="0 0 400 300" opacity="0.3"><rect width="400" height="300" fill="#1a2e1a"/></svg>
+        <div class="camera-overlay"></div>
+      </div>
+      <div class="scan-frame">
+        <div class="scan-corner c-tl"></div><div class="scan-corner c-tr"></div>
+        <div class="scan-corner c-bl"></div><div class="scan-corner c-br"></div>
+        <div class="scan-line"></div>
+      </div>
+      <div class="scan-hint">Position barcode within the frame</div>
+    </div>
+    <div class="demo-products-panel">
+      <div class="demo-panel-title">Tap to simulate scan</div>
+      <div class="demo-products-grid" id="demo-products-grid"></div>
+    </div>
+  </div>
+
+  <!-- CART -->
+  <div id="screen-cart" class="screen">
+    <div class="cart-header">
+      <div class="cart-header-left">
+        <button class="back-btn" style="background:var(--bg)" onclick="showScreen('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D1A0F" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+        <span class="cart-title">My Cart</span>
+        <span class="cart-count" id="cart-count">0</span>
+      </div>
+      <button onclick="clearCart()" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;">Clear</button>
+    </div>
+    <div class="cart-items" id="cart-items-list">
+      <div class="cart-empty" id="cart-empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <p>Your cart is empty</p>
+        <button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="gotoScanner()">Start Scanning</button>
+      </div>
+    </div>
+    <div class="cart-footer" id="cart-footer" style="display:none;">
+      <div id="weight-warning" style="display:none;" class="weight-warning">⚖️ <span>Weight alert</span></div>
+      <div class="cart-total-row"><span class="label">Subtotal</span><span class="value" id="cart-subtotal">0 RWF</span></div>
+      <div class="cart-total-row"><span class="label">Total Weight</span><span class="value" id="cart-weight">0 kg</span></div>
+      <hr class="divider"/>
+      <div class="cart-total-row grand"><span class="label">Grand Total</span><span class="value" id="cart-grand-total">0 RWF</span></div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="add-more-btn" onclick="gotoScanner()">+ Add Items</button>
+        <button class="btn-primary" style="flex:1;" onclick="gotoCheckout()">Proceed to Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKOUT -->
+  <div id="screen-checkout" class="screen">
+    <div class="checkout-header">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <button class="back-btn" onclick="showScreen('cart')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+        <div><h2 style="margin-bottom:2px;">Checkout</h2><p>Choose your payment method</p></div>
+      </div>
+    </div>
+    <div class="checkout-body">
+      <div class="checkout-summary-card">
+        <div class="receipt-card-title" style="margin-bottom:12px;">Order Summary</div>
+        <div id="checkout-items-preview"></div>
+        <hr class="divider" style="margin:10px 0;"/>
+        <div class="summary-row total"><span class="s-label">Total</span><span class="s-val" id="checkout-total">0 RWF</span></div>
+      </div>
+      <div class="payment-section">
+        <div class="payment-title">Payment Method</div>
+        <div class="payment-options">
+          <div class="payment-option selected" onclick="selectPayment('momo', this)">
+            <div class="payment-option-icon momo-icon">📱</div>
+            <div class="payment-option-info"><strong>MTN Mobile Money</strong><span>Instant payment via MoMo</span></div>
+            <div class="radio-dot"></div>
+          </div>
+          <div class="payment-option" onclick="selectPayment('airtel', this)">
+            <div class="payment-option-icon airtel-icon">📲</div>
+            <div class="payment-option-info"><strong>Airtel Money</strong><span>Pay with Airtel Money wallet</span></div>
+            <div class="radio-dot"></div>
+          </div>
+          <div class="payment-option" onclick="selectPayment('cash', this)">
+            <div class="payment-option-icon cash-icon">💵</div>
+            <div class="payment-option-info"><strong>Cash at Counter</strong><span>Pay at the exit desk</span></div>
+            <div class="radio-dot"></div>
+          </div>
+        </div>
+        <div class="phone-input-wrapper" id="phone-input-wrapper">
+          <div class="form-group" style="margin-bottom:0;margin-top:12px;"><label>Confirm Phone Number</label><input type="tel" id="checkout-phone" value="+250 788 123 456"/></div>
+        </div>
+      </div>
+      <button class="pay-now-btn" onclick="processPayment()">PAY NOW →</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="screen-processing" class="screen">
+    <div class="processing-content">
+      <div class="processing-spinner"></div>
+      <h2>Processing Payment...</h2>
+      <p>Please confirm on your phone</p>
+    </div>
+  </div>
+
+  <!-- RECEIPT -->
+  <div id="screen-receipt" class="screen">
+    <div class="receipt-header">
+      <div class="success-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>Payment Successful!</h2>
+      <p id="receipt-subtitle">Paid via MTN MoMo · Just now</p>
+    </div>
+    <div class="receipt-body">
+      <div class="receipt-card">
+        <div class="receipt-card-title">Items Purchased</div>
+        <div id="receipt-items-list"></div>
+        <hr class="divider"/>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:'Syne',sans-serif;font-weight:700;">Total Paid</span>
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--green);" id="receipt-total"></span>
+        </div>
+      </div>
+      <div class="receipt-card">
+        <div class="receipt-card-title">Exit QR Code</div>
+        <div class="qr-container">
+          <div class="qr-box"><div class="qr-pattern" id="qr-pattern"></div></div>
+          <div class="qr-label">Show this to the security guard at exit</div>
+          <div class="qr-id" id="receipt-id">TXN-XXXXXXXX</div>
+        </div>
+      </div>
+      <button class="done-btn" onclick="doneAndReset()">Done — Back to Home</button>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN ============ -->
+  <div id="screen-admin" class="screen">
+    <div class="admin-topbar">
+      <div class="admin-logo">
+        <div class="admin-logo-dot"></div>
+        <span>SCAN<em>&</em>GOO</span>
+        <span style="font-size:11px;color:#2D4A30;font-weight:500;margin-left:4px;">Admin</span>
+      </div>
+      <button class="admin-logout" onclick="showScreen('auth')">Logout</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="admin-kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-val green" id="kpi-active">0</div>
+        <div class="kpi-label">Active</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" id="kpi-total-items">0</div>
+        <div class="kpi-label">Items In Carts</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val green" id="kpi-total-revenue">0</div>
+        <div class="kpi-label">Live Value (RWF)</div>
+      </div>
+    </div>
+
+    <!-- LIVE SESSIONS -->
+    <div class="admin-section-header">
+      <h3>🛒 Live Shopper Sessions <span class="live-badge">LIVE</span></h3>
+      <button onclick="addSimSession()" style="background:rgba(0,197,102,0.12);color:var(--green);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Simulate Shopper</button>
+    </div>
+    <div class="sessions-list" id="admin-sessions-list">
+      <div class="empty-state" id="sessions-empty">No active shoppers right now</div>
+    </div>
+
+    <!-- INVENTORY SOLD -->
+    <div class="admin-section-header">
+      <h3>📊 Items Being Purchased</h3>
+    </div>
+    <div class="inventory-table" id="admin-inventory"></div>
+
+    <!-- ALERTS -->
+    <div class="admin-section-header">
+      <h3>⚠️ Alerts <span class="red-badge" id="alert-count">0</span></h3>
+    </div>
+    <div class="alerts-list" id="admin-alerts-list">
+      <div style="padding:0 0 8px;color:#2D4A30;font-size:13px;text-align:center;" id="alerts-empty">No alerts</div>
+    </div>
+
+    <!-- COMPLETED -->
+    <div class="admin-section-header">
+      <h3>✅ Completed Today</h3>
+      <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--green);" id="completed-total-rev">0 RWF</span>
+    </div>
+    <div class="completed-list" id="admin-completed-list">
+      <div class="empty-state" id="completed-empty">No completed sessions yet</div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const PRODUCTS = [
+  { id:'P001', name:'Indomie Noodles',    emoji:'🍜', price:350,  weight:0.075, barcode:'6001254001234', ageRestricted:false },
+  { id:'P002', name:'Milk 1L',            emoji:'🥛', price:800,  weight:1.0,   barcode:'6001254002345', ageRestricted:false },
+  { id:'P003', name:'Mineral Water 500ml',emoji:'💧', price:300,  weight:0.5,   barcode:'6001254003456', ageRestricted:false },
+  { id:'P004', name:'Primus Beer 500ml',  emoji:'🍺', price:1200, weight:0.5,   barcode:'6001254004567', ageRestricted:true  },
+  { id:'P005', name:'Bread (White Loaf)', emoji:'🍞', price:1000, weight:0.4,   barcode:'6001254005678', ageRestricted:false },
+  { id:'P006', name:'Cooking Oil 500ml',  emoji:'🫙', price:2500, weight:0.5,   barcode:'6001254006789', ageRestricted:false },
+  { id:'P007', name:'Sugar 1kg',          emoji:'🧂', price:900,  weight:1.0,   barcode:'6001254007890', ageRestricted:false },
+  { id:'P008', name:'Eggs (Tray 12)',     emoji:'🥚', price:2400, weight:0.7,   barcode:'6001254008901', ageRestricted:false },
+];
+
+// Current shopper cart
+let cart = [];
+let selectedPayment = 'momo';
+let currentTxnId = '';
+const SHOPPER_SESSION_ID = 'SESS-' + Math.random().toString(36).substr(2,6).toUpperCase();
+
+// Shared store state (simulates backend)
+// activeSessions: { [id]: { name, avatar, color, items:[{product,qty}], startTime, status } }
+let activeSessions = {};
+let completedSessions = [];
+let alerts = [
+  { icon:'🥛', title:'Milk 1L — Price mismatch', detail:'Shelf: 800 RWF → System: 900 RWF', time:'2m ago' },
+];
+
+// Simulated other shoppers
+const SIM_NAMES = ['Kalisa Eric','Uwase Marie','Ntwari Paul','Ingabire Sophie','Habimana Jean'];
+const SIM_COLORS = ['#2E7CF6','#7B5EA7','#FF8C00','#00B4D8','#E63946'];
+let simTimers = [];
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = function() {
+  renderDemoProducts();
+  // Register current shopper session
+  activeSessions[SHOPPER_SESSION_ID] = {
+    name: 'Amahoro Jean (You)',
+    avatar: 'AJ',
+    color: '#00C566',
+    items: [],
+    startTime: new Date(),
+    status: 'active'
+  };
+  // Pre-seed 2 sim sessions
+  setTimeout(() => addSimSession(), 800);
+  setTimeout(() => addSimSession(), 1800);
+  setTimeout(() => showScreen('auth'), 2500);
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name === 'cart') renderCart();
+  if (name === 'admin') renderAdminFull();
+}
+function gotoScanner() { showScreen('scanner'); }
+function gotoCheckout() { if (!cart.length) return; renderCheckout(); showScreen('checkout'); }
+
+// ============================================================
+// AUTH
+// ============================================================
+function switchAuthTab(tab, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('auth-register').style.display = tab === 'register' ? 'block' : 'none';
+}
+function doLogin() { showScreen('home'); }
+function doAdminLogin() { renderAdminFull(); showScreen('admin'); }
+
+// ============================================================
+// SCAN → CART → ADMIN SYNC
+// ============================================================
+function renderDemoProducts() {
+  document.getElementById('demo-products-grid').innerHTML = PRODUCTS.map(p => `
+    <button class="demo-product-btn" onclick="scanProduct('${p.id}')">
+      <div style="font-size:22px;margin-bottom:4px;">${p.emoji}</div>
+      <div class="dp-name">${p.name}</div>
+      <div class="dp-price">${p.price.toLocaleString()} RWF</div>
+      <div class="dp-weight">${p.weight}kg</div>
+    </button>`).join('');
+}
+
+function scanProduct(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+  const existing = cart.find(i => i.product.id === productId);
+  if (existing) { existing.qty++; } else { cart.push({ product, qty: 1 }); }
+
+  // Flash
+  const frame = document.querySelector('.scan-frame');
+  frame.style.boxShadow = '0 0 0 3px var(--green)';
+  frame.style.background = 'rgba(0,197,102,0.1)';
+  setTimeout(() => { frame.style.boxShadow = ''; frame.style.background = ''; }, 400);
+
+  // Price mismatch alert for milk
+  if (product.id === 'P002') {
+    pushAlert('🥛', 'Milk 1L — Price mismatch', 'Shelf: 800 RWF → Scanned: 900 RWF');
+  }
+
+  // Sync to admin store
+  syncShopperToAdmin();
+
+  setTimeout(() => showScreen('cart'), 300);
+}
+
+function syncShopperToAdmin() {
+  if (activeSessions[SHOPPER_SESSION_ID]) {
+    activeSessions[SHOPPER_SESSION_ID].items = cart.map(i => ({ product: i.product, qty: i.qty }));
+    activeSessions[SHOPPER_SESSION_ID].status = cart.length > 0 ? 'active' : 'idle';
+  }
+}
+
+// ============================================================
+// CART
+// ============================================================
+function renderCart() {
+  const list = document.getElementById('cart-items-list');
+  const empty = document.getElementById('cart-empty-state');
+  const footer = document.getElementById('cart-footer');
+  const countEl = document.getElementById('cart-count');
+  const totalQty = cart.reduce((s,i) => s + i.qty, 0);
+  const totalPrice = cart.reduce((s,i) => s + i.product.price * i.qty, 0);
+  const totalWeight = cart.reduce((s,i) => s + i.product.weight * i.qty, 0);
+  countEl.textContent = totalQty;
+  list.querySelectorAll('.cart-item').forEach(el => el.remove());
+  if (!cart.length) { empty.style.display = 'flex'; footer.style.display = 'none'; return; }
+  empty.style.display = 'none'; footer.style.display = 'block';
+  cart.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <div class="item-emoji">${item.product.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.product.name}</div>
+        <div class="item-meta">${item.product.price.toLocaleString()} RWF · ${item.product.weight}kg</div>
+      </div>
+      <div class="item-controls">
+        <button class="qty-btn remove" onclick="changeQty('${item.product.id}',-1)">−</button>
+        <span class="qty-val">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.product.id}',1)">+</button>
+      </div>
+      <div class="item-price">${(item.product.price*item.qty).toLocaleString()}<br><span style="font-size:11px;color:var(--gray);font-weight:400;">RWF</span></div>`;
+    list.insertBefore(div, footer);
+  });
+  document.getElementById('cart-subtotal').textContent = totalPrice.toLocaleString() + ' RWF';
+  document.getElementById('cart-grand-total').textContent = totalPrice.toLocaleString() + ' RWF';
+  document.getElementById('cart-weight').textContent = totalWeight.toFixed(2) + ' kg';
+  const ww = document.getElementById('weight-warning');
+  if (totalWeight > 5) {
+    ww.style.display = 'flex'; ww.innerHTML = `⚖️ <span>Total weight ${totalWeight.toFixed(1)}kg exceeds 5kg. Security check at exit.</span>`;
+  } else { ww.style.display = 'none'; }
+}
+
+function changeQty(productId, delta) {
+  const idx = cart.findIndex(i => i.product.id === productId);
+  if (idx === -1) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  syncShopperToAdmin();
+  renderCart();
+}
+
+function clearCart() { cart = []; syncShopperToAdmin(); renderCart(); }
+
+// ============================================================
+// CHECKOUT
+// ============================================================
+function selectPayment(method, el) {
+  selectedPayment = method;
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('phone-input-wrapper').style.display = method === 'cash' ? 'none' : 'block';
+}
+
+function renderCheckout() {
+  const total = cart.reduce((s,i) => s + i.product.price * i.qty, 0);
+  document.getElementById('checkout-total').textContent = total.toLocaleString() + ' RWF';
+  document.getElementById('checkout-items-preview').innerHTML = cart.map(item => `
+    <div class="summary-row">
+      <span class="s-label">${item.product.emoji} ${item.product.name} x${item.qty}</span>
+      <span class="s-val">${(item.product.price*item.qty).toLocaleString()} RWF</span>
+    </div>`).join('');
+}
+
+function processPayment() {
+  if (activeSessions[SHOPPER_SESSION_ID]) {
+    activeSessions[SHOPPER_SESSION_ID].status = 'paying';
+  }
+  showScreen('processing');
+  setTimeout(() => { generateReceipt(); showScreen('receipt'); }, 2800);
+}
+
+// ============================================================
+// RECEIPT
+// ============================================================
+function generateReceipt() {
+  const total = cart.reduce((s,i) => s + i.product.price * i.qty, 0);
+  currentTxnId = 'TXN-' + Math.random().toString(36).substr(2,8).toUpperCase();
+  const methodNames = { momo:'MTN MoMo', airtel:'Airtel Money', cash:'Cash' };
+  document.getElementById('receipt-subtitle').textContent = `Paid via ${methodNames[selectedPayment]} · Just now`;
+  document.getElementById('receipt-total').textContent = total.toLocaleString() + ' RWF';
+  document.getElementById('receipt-id').textContent = currentTxnId;
+  document.getElementById('receipt-items-list').innerHTML = cart.map(item => `
+    <div class="receipt-item-row">
+      <div><div class="r-item-name">${item.product.emoji} ${item.product.name}</div><div class="r-item-qty">x${item.qty} × ${item.product.price.toLocaleString()} RWF</div></div>
+      <div class="r-item-price">${(item.product.price*item.qty).toLocaleString()} RWF</div>
+    </div>`).join('');
+  // QR pattern
+  const qp = document.getElementById('qr-pattern');
+  qp.innerHTML = '';
+  for (let i = 0; i < 100; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'qr-cell';
+    const row = Math.floor(i/10), col = i%10;
+    const inCorner = (row<3&&col<3)||(row<3&&col>6)||(row>6&&col<3);
+    cell.style.background = (inCorner||Math.random()>0.5) ? '#0D1A0F' : 'transparent';
+    qp.appendChild(cell);
+  }
+  // Move session to completed
+  const sessionCopy = { ...activeSessions[SHOPPER_SESSION_ID] };
+  sessionCopy.items = cart.map(i => ({ product: i.product, qty: i.qty }));
+  sessionCopy.total = total;
+  sessionCopy.txnId = currentTxnId;
+  sessionCopy.method = methodNames[selectedPayment];
+  sessionCopy.completedAt = new Date();
+  completedSessions.unshift(sessionCopy);
+  // Reset session
+  activeSessions[SHOPPER_SESSION_ID].items = [];
+  activeSessions[SHOPPER_SESSION_ID].status = 'idle';
+}
+
+function doneAndReset() {
+  cart = []; syncShopperToAdmin(); showScreen('home');
+}
+
+// ============================================================
+// SIMULATE OTHER SHOPPERS
+// ============================================================
+let simCount = 0;
+function addSimSession() {
+  const idx = simCount % SIM_NAMES.length;
+  const sid = 'SIM-' + Math.random().toString(36).substr(2,6).toUpperCase();
+  const parts = SIM_NAMES[idx].split(' ');
+  activeSessions[sid] = {
+    name: SIM_NAMES[idx],
+    avatar: parts[0][0] + parts[1][0],
+    color: SIM_COLORS[idx % SIM_COLORS.length],
+    items: [],
+    startTime: new Date(),
+    status: 'active',
+    isSim: true
+  };
+  simCount++;
+  // Randomly add items every few seconds
+  let scanCount = 0;
+  const maxScans = 3 + Math.floor(Math.random() * 5);
+  const timer = setInterval(() => {
+    const randProduct = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+    const existing = activeSessions[sid]?.items?.find(i => i.product.id === randProduct.id);
+    if (existing) { existing.qty++; }
+    else if (activeSessions[sid]) { activeSessions[sid].items.push({ product: randProduct, qty: 1 }); }
+    scanCount++;
+    // Occasionally trigger alert
+    if (randProduct.ageRestricted && Math.random() > 0.7) {
+      pushAlert(randProduct.emoji, `${randProduct.name} — Age-restricted item`, `${activeSessions[sid]?.name || 'A shopper'} scanned an 18+ item`);
+    }
+    if (scanCount >= maxScans && activeSessions[sid]) {
+      clearInterval(timer);
+      // Complete the sim session after a delay
+      setTimeout(() => {
+        if (!activeSessions[sid]) return;
+        const s = activeSessions[sid];
+        const total = s.items.reduce((sum,i) => sum + i.product.price * i.qty, 0);
+        completedSessions.unshift({
+          name: s.name, avatar: s.avatar, color: s.color,
+          items: [...s.items], total,
+          txnId: 'TXN-' + Math.random().toString(36).substr(2,8).toUpperCase(),
+          method: ['MTN MoMo','Airtel Money'][Math.floor(Math.random()*2)],
+          completedAt: new Date()
+        });
+        delete activeSessions[sid];
+        if (document.getElementById('screen-admin').classList.contains('active')) renderAdminFull();
+      }, 4000 + Math.random() * 5000);
+    }
+    if (document.getElementById('screen-admin').classList.contains('active')) renderAdminFull();
+  }, 1800 + Math.random() * 1200);
+  simTimers.push(timer);
+  if (document.getElementById('screen-admin').classList.contains('active')) renderAdminFull();
+}
+
+function pushAlert(icon, title, detail) {
+  alerts.unshift({ icon, title, detail, time: 'just now' });
+  if (alerts.length > 8) alerts = alerts.slice(0, 8);
+}
+
+// ============================================================
+// ADMIN RENDER
+// ============================================================
+function renderAdminFull() {
+  renderAdminKPIs();
+  renderAdminSessions();
+  renderAdminInventory();
+  renderAdminAlerts();
+  renderAdminCompleted();
+}
+
+function renderAdminKPIs() {
+  const sessions = Object.values(activeSessions);
+  const active = sessions.filter(s => s.status === 'active' || s.status === 'paying').length;
+  const totalItems = sessions.reduce((s, sess) => s + sess.items.reduce((a,i) => a + i.qty, 0), 0);
+  const liveValue = sessions.reduce((s, sess) => s + sess.items.reduce((a,i) => a + i.product.price * i.qty, 0), 0);
+  document.getElementById('kpi-active').textContent = active;
+  document.getElementById('kpi-total-items').textContent = totalItems;
+  document.getElementById('kpi-total-revenue').textContent = liveValue >= 1000 ? (liveValue/1000).toFixed(1)+'k' : liveValue;
+}
+
+function renderAdminSessions() {
+  const list = document.getElementById('admin-sessions-list');
+  const sessions = Object.entries(activeSessions);
+  if (sessions.length === 0) {
+    list.innerHTML = '<div class="empty-state" id="sessions-empty">No active shoppers right now</div>';
+    return;
+  }
+  list.innerHTML = sessions.map(([sid, sess]) => {
+    const total = sess.items.reduce((s,i) => s + i.product.price * i.qty, 0);
+    const totalQty = sess.items.reduce((s,i) => s + i.qty, 0);
+    const totalWeight = sess.items.reduce((s,i) => s + i.product.weight * i.qty, 0);
+    const dotClass = sess.status === 'paying' ? 'idle' : sess.status === 'idle' ? 'idle' : '';
+    const elapsed = Math.floor((new Date() - sess.startTime) / 60000);
+    const isOpen = document.getElementById('sess-table-'+sid)?.classList.contains('open');
+    return `
+      <div class="session-card" id="sess-card-${sid}">
+        <div class="session-header" onclick="toggleSession('${sid}')">
+          <div class="session-avatar" style="background:${sess.color}20;color:${sess.color}">${sess.avatar}</div>
+          <div class="session-info">
+            <div class="session-name">${sess.name}${sess.name.includes('You') ? ' <span style="font-size:10px;background:rgba(0,197,102,0.15);color:var(--green);padding:2px 6px;border-radius:6px;">YOU</span>' : ''}</div>
+            <div class="session-meta">${elapsed}min ago · ${totalQty} item${totalQty!==1?'s':''} · ${totalWeight.toFixed(2)}kg</div>
+          </div>
+          <div class="session-summary">
+            <div class="session-total">${total.toLocaleString()} RWF</div>
+            <div class="session-item-count">${totalQty} item${totalQty!==1?'s':''}</div>
+          </div>
+          <div class="session-status-dot ${dotClass}"></div>
+        </div>
+        <div class="session-items-table ${isOpen?'open':''}" id="sess-table-${sid}">
+          ${sess.items.length === 0
+            ? '<div style="padding:12px 0;color:#2D4A30;font-size:13px;text-align:center;">Cart is empty</div>'
+            : sess.items.map(item => `
+              <div class="sit-row">
+                <div class="sit-emoji">${item.product.emoji}</div>
+                <div class="sit-name">${item.product.name}</div>
+                <div class="sit-qty">×${item.qty}</div>
+                <div class="sit-price">${(item.product.price*item.qty).toLocaleString()} RWF</div>
+              </div>`).join('')
+          }
+          ${sess.items.length > 0 ? `
+          <div class="sit-total-row">
+            <div>
+              <div class="sit-total-label">Cart Total</div>
+              <div class="sit-weight">${totalWeight.toFixed(2)} kg total weight</div>
+            </div>
+            <div class="sit-total-val">${total.toLocaleString()} RWF</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleSession(sid) {
+  const table = document.getElementById('sess-table-' + sid);
+  if (table) table.classList.toggle('open');
+}
+
+function renderAdminInventory() {
+  const container = document.getElementById('admin-inventory');
+  // Aggregate all items in all active + completed sessions
+  const tally = {}; // productId -> { qty, revenue }
+  const allSessions = [...Object.values(activeSessions), ...completedSessions];
+  allSessions.forEach(sess => {
+    (sess.items || []).forEach(item => {
+      if (!tally[item.product.id]) tally[item.product.id] = { product: item.product, qty: 0, revenue: 0 };
+      tally[item.product.id].qty += item.qty;
+      tally[item.product.id].revenue += item.product.price * item.qty;
+    });
+  });
+  const sorted = Object.values(tally).sort((a,b) => b.qty - a.qty);
+  const maxQty = sorted.length > 0 ? sorted[0].qty : 1;
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty-state">No items scanned yet</div>';
+    return;
+  }
+  container.innerHTML = sorted.map(item => `
+    <div class="inv-row">
+      <div class="inv-emoji">${item.product.emoji}</div>
+      <div class="inv-name-col">
+        <div class="inv-name">${item.product.name}</div>
+        <div class="inv-price">${item.product.price.toLocaleString()} RWF each</div>
+        <div class="inv-bar-wrap"><div class="inv-bar-fill" style="width:${Math.round(item.qty/maxQty*100)}%"></div></div>
+      </div>
+      <div class="inv-sold">
+        <div class="inv-sold-val">${item.qty}</div>
+        <div class="inv-sold-label">units</div>
+      </div>
+      <div class="inv-revenue">
+        <div class="inv-rev-val">${item.revenue >= 1000 ? (item.revenue/1000).toFixed(1)+'k' : item.revenue} RWF</div>
+        <div class="inv-rev-label">revenue</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderAdminAlerts() {
+  const list = document.getElementById('admin-alerts-list');
+  document.getElementById('alert-count').textContent = alerts.length;
+  if (alerts.length === 0) {
+    list.innerHTML = '<div style="padding:8px 0 8px;color:#2D4A30;font-size:13px;text-align:center;" id="alerts-empty">No alerts</div>';
+    return;
+  }
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-card">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-body"><strong>${a.title}</strong><span>${a.detail}</span></div>
+      <div class="alert-time">${a.time}</div>
+    </div>`).join('');
+}
+
+function renderAdminCompleted() {
+  const list = document.getElementById('admin-completed-list');
+  const totalRev = completedSessions.reduce((s,c) => s + (c.total||0), 0);
+  document.getElementById('completed-total-rev').textContent = totalRev.toLocaleString() + ' RWF';
+  if (completedSessions.length === 0) {
+    list.innerHTML = '<div class="empty-state" id="completed-empty">No completed sessions yet</div>';
+    return;
+  }
+  list.innerHTML = completedSessions.map(c => {
+    const qty = c.items.reduce((s,i) => s + i.qty, 0);
+    return `
+      <div class="completed-row">
+        <div class="completed-tick">✓</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#8FA696;">${c.name}</div>
+          <div class="cr-method">${c.method} · ${c.txnId}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#4D6B52;">${(c.total||0).toLocaleString()} RWF</div>
+          <div class="cr-items">${qty} items</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Auto-refresh admin every 2 seconds when open
+setInterval(() => {
+  if (document.getElementById('screen-admin').classList.contains('active')) {
+    renderAdminFull();
+  }
+}, 2000);
+</script>
+</body>
+</html>
